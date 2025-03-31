@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Користувачі</title>
+    <style>
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            color: red; /* Червоний колір тексту */
+        }
+        button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Список користувачів</h1>
+    <button id="fetchDataButton">Завантажити дані</button>
+    <button id="loadCachedDataButton">Завантажити кешовані дані</button>
+    <ul id="userList"></ul>
+    <script src="script.js"></script>
+    <script>
+    // Отримання посилань на елементи
+const fetchDataButton = document.getElementById('fetchDataButton');
+const loadCachedDataButton = document.getElementById('loadCachedDataButton');
+const userList = document.getElementById('userList');
+
+// Функція для перевірки структури JSON
+function isValidUser(user) {
+    return user.hasOwnProperty('first_name') && user.hasOwnProperty('last_name');
+}
+
+// Функція для виведення користувачів у список
+function displayUsers(users) {
+    userList.innerHTML = ''; // Очищення списку
+    users.forEach(user => {
+        const li = document.createElement('li');
+        li.textContent = `${user.first_name} ${user.last_name}`;
+        userList.appendChild(li);
+    });
+}
+
+// Функція для завантаження даних із API
+fetchDataButton.addEventListener('click', async () => {
+    try {
+        const response = await fetch('https://reqres.in/api/users');
+        if (!response.ok) {
+            throw new Error('Помилка завантаження даних');
+        }
+
+        const data = await response.json();
+        if (!data.data || !Array.isArray(data.data)) {
+            throw new Error('Структура JSON не відповідає очікуванням');
+        }
+
+        const validUsers = data.data.filter(isValidUser);
+        if (validUsers.length === 0) {
+            throw new Error('Сервер повернув порожню відповідь або некоректну структуру');
+        }
+
+        displayUsers(validUsers);
+
+        // Збереження даних у localStorage та sessionStorage
+        localStorage.setItem('users', JSON.stringify(validUsers));
+        sessionStorage.setItem('users', JSON.stringify(validUsers));
+    } catch (error) {
+        alert(error.message);
+    }
+});
+
+// Функція для завантаження даних із localStorage
+loadCachedDataButton.addEventListener('click', () => {
+    const cachedData = localStorage.getItem('users');
+    if (cachedData) {
+        const users = JSON.parse(cachedData);
+        displayUsers(users);
+    } else {
+        alert('Немає кешованих даних');
+    }
+});
+
+    </script>
+</body>
+</html>

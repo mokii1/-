@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список задач</title>
+    <style>
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            cursor: pointer;
+        }
+        button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Список задач</h1>
+    <input type="text" id="itemInput" placeholder="Введіть новий елемент">
+    <button id="addButton">Додати</button>
+    <button id="sortButton">Сортувати</button>
+    <ul id="itemList"></ul>
+    <script src="script.js"></script>
+    <script>
+    // Отримуємо посилання на необхідні елементи
+const input = document.getElementById('itemInput');
+const addButton = document.getElementById('addButton');
+const sortButton = document.getElementById('sortButton');
+const itemList = document.getElementById('itemList');
+
+// Завантаження списку із localStorage
+document.addEventListener('DOMContentLoaded', () => {
+    const savedItems = JSON.parse(localStorage.getItem('items')) || [];
+    savedItems.forEach(addListItem);
+});
+
+// Додавання нового елемента до списку
+addButton.addEventListener('click', () => {
+    const value = input.value.trim();
+    if (value) {
+        addListItem(value);
+        saveToLocalStorage();
+        input.value = ''; // Очищаємо поле вводу
+    }
+});
+
+// Сортування списку
+sortButton.addEventListener('click', () => {
+    const items = Array.from(itemList.children).map(li => li.textContent);
+    items.sort();
+    itemList.innerHTML = ''; // Очищаємо список
+    items.forEach(addListItem);
+    saveToLocalStorage();
+});
+
+// Додавання елемента до списку
+function addListItem(value) {
+    const li = document.createElement('li');
+    li.textContent = value;
+    li.addEventListener('click', () => {
+        li.remove();
+        saveToLocalStorage();
+    });
+    itemList.appendChild(li);
+}
+
+// Збереження списку у localStorage
+function saveToLocalStorage() {
+    const items = Array.from(itemList.children).map(li => li.textContent);
+    localStorage.setItem('items', JSON.stringify(items));
+}
+</script>
+</body>
+</html>

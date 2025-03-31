@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notes App</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+  }
+  
+  #app {
+    max-width: 600px;
+    margin: auto;
+  }
+  
+  form {
+    margin: 20px 0;
+  }
+  
+  input, textarea, button, select {
+    display: block;
+    margin: 10px 0;
+    padding: 10px;
+    width: 100%;
+  }
+  
+  button {
+    cursor: pointer;
+  }
+  
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  li {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 10px 0;
+  }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>Notes App</h1>
+    <div>
+      <input id="search" type="text" placeholder="Search notes">
+      <select id="filterCategory">
+        <option value="">All Categories</option>
+      </select>
+      <button id="clearStorage">Clear All Notes</button>
+    </div>
+    <form id="noteForm">
+      <input id="title" type="text" placeholder="Title" required>
+      <input id="category" type="text" placeholder="Category" required>
+      <textarea id="content" placeholder="Write your note here..." required></textarea>
+      <button type="submit">Add Note</button>
+    </form>
+    <ul id="notesList"></ul>
+  </div>
+  <script src="app.js"></script>
+  <script>
+    const notesList = document.getElementById("notesList");
+const noteForm = document.getElementById("noteForm");
+const searchInput = document.getElementById("search");
+const filterCategory = document.getElementById("filterCategory");
+const clearStorageButton = document.getElementById("clearStorage");
+
+let notes = JSON.parse(localStorage.getItem("notes")) || [];
+
+// Render Notes
+function renderNotes() {
+  notesList.innerHTML = "";
+  filterCategory.innerHTML = '<option value="">All Categories</option>';
+
+  const categories = new Set(notes.map(note => note.category));
+  categories.forEach(category => {
+    const option = document.createElement("option");
+    option.value = category;
+    option.textContent = category;
+    filterCategory.appendChild(option);
+  });
+
+  const filteredNotes = notes.filter(note => {
+    const matchesSearch = note.title.includes(searchInput.value) || note.content.includes(searchInput.value);
+    const matchesCategory = filterCategory.value ? note.category === filterCategory.value : true;
+    return matchesSearch && matchesCategory;
+  });
+
+  filteredNotes.forEach((note, index) => {
+    const listItem = document.createElement("li");
+    listItem.innerHTML = `
+      <h2>${note.title}</h2>
+      <p>${note.content}</p>
+      <small>Category: ${note.category}</small>
+      <button onclick="deleteNote(${index})">Delete</button>
+      <button onclick="editNote(${index})">Edit</button>
+    `;
+    notesList.appendChild(listItem);
+  });
+}
+
+// Add Note
+noteForm.addEventListener("submit", event => {
+  event.preventDefault();
+  const newNote = {
+    title: noteForm.title.value,
+    content: noteForm.content.value,
+    category: noteForm.category.value,
+  };
+  notes.push(newNote);
+  localStorage.setItem("notes", JSON.stringify(notes));
+  renderNotes();
+  noteForm.reset();
+});
+
+// Delete Note
+function deleteNote(index) {
+  notes.splice(index, 1);
+  localStorage.setItem("notes", JSON.stringify(notes));
+  renderNotes();
+}
+
+// Edit Note
+function editNote(index) {
+  const note = notes[index];
+  noteForm.title.value = note.title;
+  noteForm.content.value = note.content;
+  noteForm.category.value = note.category;
+  notes.splice(index, 1);
+  localStorage.setItem("notes", JSON.stringify(notes));
+  renderNotes();
+}
+
+// Search and Filter
+searchInput.addEventListener("input", renderNotes);
+filterCategory.addEventListener("change", renderNotes);
+
+// Clear Storage
+clearStorageButton.addEventListener("click", () => {
+  localStorage.clear();
+  notes = [];
+  renderNotes();
+});
+
+// Initial Render
+renderNotes();
+
+  </script>
+</body>
+</html>
